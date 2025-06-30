@@ -1,0 +1,7 @@
+PyMuPDF
+langchain
+openai
+dotenv
+weaviate-client
+python-docx
+streamlit
