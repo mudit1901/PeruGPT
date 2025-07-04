@@ -4,7 +4,8 @@ import streamlit as st
 from io import BytesIO
 from docx import Document
 from services.rfp_generator import generate_rfp
-from services.qa_chat import get_answer_from_query 
+from services.qa_chat_chroma import get_answer_from_query
+
 
 st.set_page_config(page_title="PeruGPT", layout="centered")
 
@@ -15,49 +16,60 @@ tab1, tab2 = st.tabs(["💬 Ask a Question","📄 Generate RFP"])
 
 # Q&A Chat Tab
 with tab1:
-    st.header("💬 Ask Anything")
+    st.markdown("## 💬 Ask Anything About Your PDFs")
 
-    user_question = st.text_input("Your question:", placeholder="e.g., What are the main features of the Projects?")
+    # Initialize session state for chat history
+    if "qa_history" not in st.session_state:
+        st.session_state.qa_history = []
 
-    if st.button("Ask"):
-        if user_question.strip():
-            with st.spinner("Searching and answering..."):
-                response = get_answer_from_query(user_question)
-                st.success("🧠 Answer:")
-                st.write(response)
-        else:
-            st.warning("Please enter a question.")
+    # Display chat history in bubble layout
+    for chat in st.session_state.qa_history:
+        # User message (right-aligned)
+        col1, col2 = st.columns([1, 5])
+        with col2:
+            st.markdown(
+                f"""
+                <div style='text-align: right; background-color: #dcf8c6;
+                            padding: 10px; border-radius: 10px;
+                            margin-bottom: 5px; margin-left: auto; width: fit-content; max-width: 100%;'>
+                    {chat['question']}
+                </div>
+                """, unsafe_allow_html=True
+            )
 
-# RFP Generation Tab
-with tab2:
-    st.header("📄 Generate Request For Proposal")
+        # Assistant message (left-aligned)
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            st.markdown(
+                f"""
+                <div style='text-align: left; background-color: #f1f0f0;
+                            padding: 10px; border-radius: 10px;
+                            margin-bottom: 20px; width: fit-content; max-width: 100%;'>
+                    {chat['answer']}
+                </div>
+                """, unsafe_allow_html=True
+            )
 
-    requirement = st.text_area("Enter Requirement", height=150, placeholder="e.g., AI-based resume screening system for HR...")
+    # Input box fixed at the bottom
+    user_question = st.chat_input("Ask about deliverables, scope, timeline, compliance, etc...")
 
-    if st.button("Generate RFP"):
-        if requirement.strip():
-            with st.spinner("Generating RFP..."):
-                rfp_text = generate_rfp(requirement)
+    if user_question:
+        # Store user question in chat
+        st.session_state.qa_history.append({
+            "question": user_question,
+            "answer": "⏳ Generating response..."
+        })
 
-            
-                st.markdown("### 📃 Generated RFP")
-                st.markdown(rfp_text, unsafe_allow_html=False)
+        st.rerun()
 
-                # Save to Word in memory
-                buffer = BytesIO()
-                doc = Document()
-                for para in rfp_text.split('\n'):
-                    doc.add_paragraph(para)
-                doc.save(buffer)
-                buffer.seek(0)
+    # Generate and update answer if pending
+    if st.session_state.qa_history and st.session_state.qa_history[-1]["answer"] == "⏳ Generating response...":
+            latest_q = st.session_state.qa_history[-1]["question"]
+            latest_a = get_answer_from_query(latest_q)
+            st.session_state.qa_history[-1]["answer"] = latest_a
+            st.rerun()
 
-                st.download_button(
-                    label="⬇️ Download RFP as .docx",
-                    data=buffer,
-                    file_name="Generated_RFP.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
-        else:
-            st.warning("Please enter a requirement.")
-
-
+    # Reset button
+    if st.button("🔁 Reset Chat"):
+        st.session_state.qa_history = []
+        st.rerun()

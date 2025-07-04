@@ -42,3 +42,20 @@ def get_weaviate_client():
         print("Collection 'PDFChunk' already exists.")
 
     return client
+
+
+def create_chat_history_collection(client):
+    if not client.collections.exists("ChatHistory"):
+        client.collections.create(
+            name="ChatHistory",
+            description="Stores user and assistant chats",
+            vectorizer_config=Configure.Vectorizer.none(),
+            properties=[
+                Property(name="question", data_type=DataType.TEXT, description="User input"),
+                Property(name="answer", data_type=DataType.TEXT, description="Assistant reply"),
+                Property(name="timestamp", data_type=DataType.TEXT, description="UTC ISO timestamp")
+            ]
+        )
+        print("✅ Created 'ChatHistory' collection.")
+    else:
+        print("✅ 'ChatHistory' collection already exists.")
