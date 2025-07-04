@@ -4,8 +4,7 @@ import streamlit as st
 from io import BytesIO
 from docx import Document
 from services.rfp_generator import generate_rfp
-from services.qa_chat_chroma import get_answer_from_query
-
+from services.qa_chat import get_answer_from_query
 
 st.set_page_config(page_title="PeruGPT", layout="centered")
 

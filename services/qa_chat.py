@@ -12,13 +12,13 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def get_answer_from_query(question: str) -> str:
     try:
         with ChatMemoryManager() as memory:
-            print("Fetching relevant chats...")
-            try:
-                relevant_chats = memory.get_relevant_chats(question, top_k=3)
-                print("Relevant chats fetched:", relevant_chats)
-            except Exception as e:
-                print("Error fetching relevant chats:", e)
-                return f"Error fetching relevant chats: {e}"
+            # print("Fetching relevant chats...")
+            # try:
+            #     relevant_chats = memory.get_relevant_chats(question, top_k=3)
+            #     print("Relevant chats fetched:", relevant_chats)
+            # except Exception as e:
+            #     print("Error fetching relevant chats:", e)
+            #     return f"Error fetching relevant chats: {e}"
 
             print("🧠 Fetching last chat history...")
             try:
@@ -45,8 +45,8 @@ def get_answer_from_query(question: str) -> str:
                 messages.append({"role": "user", "content": chat["question"]})
                 messages.append({"role": "assistant", "content": chat["answer"]})
 
-            context = "\n\n".join([f"Q: {chat['question']}\nA: {chat['answer']}" for chat in relevant_chats])
-            context_block = f"Reference:\n{context}\n\nQuestion:\n{question}\n\nAnswer:"
+            # context = "\n\n".join([f"Q: {chat['question']}\nA: {chat['answer']}" for chat in relevant_chats])
+            context_block = f"\nQuestion:\n{question}\n\nAnswer:"
             messages.append({"role": "user", "content": context_block})
 
             print("Sending to OpenAI...")
